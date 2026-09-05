@@ -53,7 +53,7 @@ const RELEASE_TAG='dies-iovis';
 const RELEASE_BASE=`https://github.com/bryanzzai/bryanmackayne/releases/download/${RELEASE_TAG}`;
 const tracks=[
 ['I','Core'],['II','Jazz'],['III','Jazz'],['IV','Slow'],['V','Slow'],['VI','Tema'],['VII','Boom'],['VIII','Boom'],['IX','Tema'],['X','Tema'],['XI','Tema'],['XII','Sand'],['XIII','Anon'],['XIV','Song'],['XV','Song'],['XVI','Rain'],['XVII','Rain'],['XVIII','Snow'],['XIX','Bird'],['XX','Bull'],['XXI','Bull'],['XXII','Frog'],['XXIII','Frog'],['XXIV','Boom'],['XXV','Wind']
-].map(([roman,label],i)=>({roman,label,index:i,title:`Dies Iovis [ ${roman} ] - ${label}`,file:`Dies.Iovis.${roman}.-.${label}.m4a`}));
+].map(([roman,label],i)=>({roman,label,index:i,title:`Dies Iovis [ ${roman} ] - ${label}`,file:`Dies.Iovis.${roman}.-.${label}.web.m4a`}));
 const $=s=>document.querySelector(s), audio=$('#audio'), play=$('#play'), wave=$('#wave'), list=$('#trackList');
 let current=0, shuffle=false, repeat=false, waveBars=[];
 function fmt(sec){if(!isFinite(sec))return'0:00';sec=Math.max(0,Math.floor(sec));return`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`}
