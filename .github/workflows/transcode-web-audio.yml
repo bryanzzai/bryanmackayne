@@ -2,6 +2,11 @@ name: Transcode web audio
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag to transcode
+        required: true
+        default: dies-iovis
 
 permissions:
   contents: write
@@ -10,18 +15,20 @@ jobs:
   transcode:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
     steps:
       - name: Install ffmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Download ALAC release assets
+      - name: Download release audio assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p source web
-          gh release download dies-iovis \
+          gh release download "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --dir source \
             --pattern '*.m4a'
@@ -32,7 +39,9 @@ jobs:
           for f in source/*.m4a; do
             base="${f##*/}"
             [[ "$base" == *.web.m4a ]] && continue
-            out="${base%.m4a}.web.m4a"
+            stem="${base%.m4a}"
+            safe="$(printf '%s' "$stem" | sed -E 's/[[:space:]]+/./g; s/\[//g; s/\]//g; s/\.+/./g; s/^\.//; s/\.$//')"
+            out="${safe}.web.m4a"
             echo "Transcoding $base -> $out"
             ffmpeg -hide_banner -loglevel error -y \
               -i "$f" \
@@ -44,6 +53,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload dies-iovis web/*.web.m4a \
+          gh release upload "$RELEASE_TAG" web/*.web.m4a \
             --repo "$GITHUB_REPOSITORY" \
             --clobber
