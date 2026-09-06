@@ -15,7 +15,7 @@ body{font-family:Georgia,'Times New Roman',serif;background:radial-gradient(circ
 h1{margin:0 auto;max-width:1200px;font-weight:500;line-height:.96;font-size:clamp(2.25rem,6vw,6rem);letter-spacing:.035em;text-transform:uppercase;background:linear-gradient(180deg,#fff0b3 0%,#ddb659 42%,#9b6b1b 76%,#f0ce76 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #4e3210) drop-shadow(0 7px 13px #000)}
 .ornament{width:min(600px,70vw);height:1px;margin:24px auto 0;background:linear-gradient(90deg,transparent,#a77a2c 18%,#ffe19a 50%,#a77a2c 82%,transparent);position:relative}.ornament:after{content:'◆';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#e4bd66;background:#17110a;padding:0 12px;font-size:.75rem}
 .spacer{flex:1;min-height:clamp(330px,48vh,680px)}
-.consoleDock{position:relative;z-index:3;width:100%;display:flex;justify-content:flex-end;padding:clamp(280px,30vh,320px) clamp(18px,4vw,62px) 34px}
+.consoleDock{position:relative;z-index:3;width:100%;display:flex;justify-content:flex-end;padding:calc(clamp(280px,30vh,320px) + 96px) clamp(18px,4vw,62px) 34px}
 .console{width:min(650px,92vw);position:relative;padding:24px 24px 29px;border:3px solid #070808;border-radius:18px;background:linear-gradient(145deg,#4b4d4c 0%,#262827 18%,#111313 58%,#303231 100%);box-shadow:0 28px 60px #000d,inset 0 2px 0 #9d9d9355,inset 0 -3px 0 #000,inset 0 0 0 7px #161817}
 .console:before,.console:after{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#aaa 0 8%,#555 20%,#151515 68%,#050505 100%);box-shadow:0 1px 2px #000}
 .console:before{left:10px;top:10px}.console:after{right:10px;bottom:10px}
