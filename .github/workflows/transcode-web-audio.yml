@@ -4,9 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Release tag to transcode
+        description: Release tag to transcode (for example dies-solis)
         required: true
-        default: dies-iovis
 
 permissions:
   contents: write
