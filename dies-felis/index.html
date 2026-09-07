@@ -35,9 +35,9 @@ button,input{font:inherit}.shell{width:min(1180px,calc(100% - 28px));margin:auto
   <div id="wave" class="wave" aria-label="Seek through track"></div>
   <div class="timeRow"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
   <div class="controls">
-    <div class="toggles"><button id="shuffle" class="mini" title="Shuffle">⤨</button><button id="repeat" class="mini" title="Repeat">↻</button></div>
-    <div class="transport"><button id="prev" class="mini" title="Previous">⏮</button><button id="play" class="circle" title="Play/Pause">▶</button><button id="next" class="mini" title="Next">⏭</button></div>
-    <div class="volume"><span>🔊</span><input id="volume" type="range" min="0" max="1" step="0.01" value="0.86" aria-label="Volume" /></div>
+    <div class="toggles"><button id="shuffle" class="mini" title="Shuffle">⤩</button><button id="repeat" class="mini" title="Repeat">↻</button></div>
+    <div class="transport"><button id="prev" class="mini" title="Previous">⏬</button><button id="play" class="circle" title="Play/Pause">▶</button><button id="next" class="mini" title="Next">⏭</button></div>
+    <div class="volume"><span>🔧</span><input id="volume" type="range" min="0" max="1" step="0.01" value="0.86" aria-label="Volume" /></div>
   </div>
 </section>
 
@@ -54,50 +54,12 @@ button,input{font:inherit}.shell{width:min(1180px,calc(100% - 28px));margin:auto
   <div class="lbTint" aria-hidden="true"></div>
   <figure class="lbFigure"><img id="lbImage" class="lbMain" src="" alt="" /></figure>
   <button id="lbClose" class="lbClose" type="button" aria-label="Close artwork">×</button>
-  <button id="lbPrev" class="lbNav lbPrev" type="button" aria-label="Previous artwork">‹</button>
-  <button id="lbNext" class="lbNav lbNext" type="button" aria-label="Next artwork">›</button>
+  <button id="lbPrev" class="lbNav lbPrev" type="button" aria-label="Previous artwork">¹</button>
+  <button id="lbNext" class="lbNav lbNext" type="button" aria-label="Next artwork">»</button>
 </div>
 
 <audio id="audio" preload="metadata"></audio>
 <script>
 const RELEASE_TAG='dies-felis';
 const RELEASE_BASE=`https://github.com/bryanzzai/bryanmackayne/releases/download/${RELEASE_TAG}`;
-const tracks=[['CS-80-001 [ I ]','CS-80-001.I.web.m4a','CS-80-001 [ I ].png'],['CS-80-001 [ II ]','CS-80-001.II.web.m4a','CS-80-001 [ II ].png'],['Desert Darling [ I ]','Desert.Darling.I.web.m4a','Desert Darling [ I ].png'],['Devil of Lonely Gypsy Days','Devil.of.Lonely.Gypsy.Days.web.m4a','Devil of Lonely Gypsy Days.png'],['Dollar and a Dime [ IV ]','Dollar.and.a.Dime.IV.web.m4a','Dollar and a Dime [ IV ].png'],['DooWhatUGottaDoo [ I ]','DooWhatUGottaDoo.I.web.m4a','DooWhatUGottaDoo [ I ].png'],['DooWhatUGottaDoo [ II ]','DooWhatUGottaDoo.II.web.m4a','DooWhatUGottaDoo [ II ].png'],['Gateway Girl [ IV ]','Gateway.Girl.IV.web.m4a','Gateway Girl [ IV ].png'],['Heavens Above [ IV ]','Heavens.Above.IV.web.m4a','Heavens Above [ IV ].png'],['Heavens Above [ IX ]','Heavens.Above.IX.web.m4a','Heavens Above [ IX ].png'],['Intergalactic Lovers [ IV ]','Intergalactic.Lovers.IV.web.m4a','Intergalactic Lovers [ IV ].png'],['Lead My Way','Lead.My.Way.web.m4a','Lead My Way.png'],['Light of Love [ I ]','Light.of.Love.I.web.m4a','Light of Love [ I ].png'],['Midnight Woodblock [ IV ]','Midnight.Woodblock.IV.web.m4a','Midnight Woodblock [ IV ].png'],['Side by Side [ II ]','Side.by.Side.II.web.m4a','Side by Side [ II ].png'],['Side by Side [ IV ]','Side.by.Side.IV.web.m4a','Side by Side [ IV ].png'],['Silent Wings','Silent.Wings.web.m4a','Silent Wings.png'],['Stone to Star [ IV ]','Stone.to.Star.IV.web.m4a','Stone to Star [ IV ].png'],['The Weight of Silence [ IV ]','The.Weight.of.Silence.IV.web.m4a','The Weight of Silence [ IV ].png'],['Ufolandia [ IV ]','Ufolandia.IV.web.m4a','Ufolandia [ IV ].png'],['Velvet Pistachio [ IV ]','Velvet.Pistachio.IV.web.m4a','Velvet Pistachio [ IV ].png'],['Acustic One More [ II ]','Acustic.One.More.II.web.m4a','Acustic One More [ II ].png'],['Apple Tree, Oh Apple Tree [ II ]','Apple.Tree,.Oh.Apple.Tree.II.web.m4a','Apple Tree, Oh Apple Tree [ II ].png'],['Black Hole Heart [ IV ]','Black.Hole.Heart.IV.web.m4a','Black Hole Heart [ IV ].png']].map(([title,file,art],i)=>({title,file,art,index:i}));
-const $=s=>document.querySelector(s), audio=$('#audio'), play=$('#play'), wave=$('#wave'), list=$('#trackList');
-const lightbox=$('#lightbox'), lbImage=$('#lbImage'), lbBackdropImage=$('#lbBackdropImage');
-let current=0, shuffle=false, repeat=false, waveBars=[], lightboxIndex=0;
-function fmt(sec){if(!isFinite(sec))return'0:00';sec=Math.max(0,Math.floor(sec));return`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`}
-function assetUrl(file){return `${RELEASE_BASE}/${encodeURIComponent(file)}`}
-function artUrl(file){return `art/${encodeURIComponent(file)}`}
-function seededBars(seed,n=92){let h=2166136261;for(const c of seed){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}const vals=[];for(let i=0;i<n;i++){h^=h<<13;h^=h>>>17;h^=h<<5;vals.push(18+(Math.abs(h)%82))}return vals}
-function buildWave(seed){wave.innerHTML='';waveBars=seededBars(seed).map(v=>{const b=document.createElement('span');b.className='bar';b.style.height=`${v}%`;wave.appendChild(b);return b})}
-function paintWave(){const p=audio.duration?audio.currentTime/audio.duration:0;const cut=Math.floor(p*waveBars.length);waveBars.forEach((b,i)=>b.classList.toggle('played',i<=cut))}
-function renderList(filter=''){
-  const q=filter.trim().toLowerCase();
-  const visible=tracks.filter(t=>t.title.toLowerCase().includes(q));
-  list.innerHTML=visible.length?'':'<div class="empty">No matching tracks.</div>';
-  visible.forEach(t=>{
-    const row=document.createElement('div');row.className='track'+(t.index===current?' active':'');
-    row.innerHTML=`<div class="num">${String(t.index+1).padStart(2,'0')}</div><div><div class="name">${t.title}</div><div class="sub">Bryan MacKayne · Dies Felis <span class="playGlyph">${t.index===current&&!audio.paused?'❚❚':'▶'}</span></div></div><button class="artBtn" type="button" aria-label="Open artwork for ${t.title}"><img class="artThumb" src="${artUrl(t.art)}" alt="Artwork for ${t.title}" loading="lazy" decoding="async"></button>`;
-    row.onclick=()=>loadTrack(t.index,true);const artBtn=row.querySelector('.artBtn');const img=row.querySelector('.artThumb');artBtn.onclick=e=>{e.stopPropagation();openLightbox(t.index)};img.onerror=()=>{artBtn.hidden=true};list.appendChild(row);
-  })
-}
-function loadTrack(i,autoplay=false){current=(i+tracks.length)%tracks.length;const t=tracks[current];audio.src=assetUrl(t.file);$('#trackTitle').textContent=t.title;$('#status').textContent='loading';buildWave(t.title);paintWave();renderList($('#search').value);if(autoplay)audio.play().catch(()=>{});}
-function nextTrack(){if(shuffle){let n=current;while(n===current&&tracks.length>1)n=Math.floor(Math.random()*tracks.length);loadTrack(n,true)}else loadTrack(current+1,true)}
-function prevTrack(){if(audio.currentTime>4){audio.currentTime=0}else loadTrack(current-1,true)}
-function showLightboxArt(i){lightboxIndex=(i+tracks.length)%tracks.length;const t=tracks[lightboxIndex],src=artUrl(t.art);lbImage.src=src;lbImage.alt=`Artwork for ${t.title}`;lbBackdropImage.src=src;const pre1=new Image(),pre2=new Image();pre1.src=artUrl(tracks[(lightboxIndex+1)%tracks.length].art);pre2.src=artUrl(tracks[(lightboxIndex-1+tracks.length)%tracks.length].art)}
-function openLightbox(i){showLightboxArt(i);lightbox.hidden=false;lightbox.setAttribute('aria-hidden','false');document.body.classList.add('noScroll');$('#lbClose').focus()}
-function closeLightbox(){lightbox.hidden=true;lightbox.setAttribute('aria-hidden','true');document.body.classList.remove('noScroll')}
-play.onclick=()=>audio.paused?audio.play().catch(()=>{}):audio.pause();$('#next').onclick=nextTrack;$('#prev').onclick=prevTrack;
-$('#shuffle').onclick=()=>{shuffle=!shuffle;$('#shuffle').classList.toggle('active',shuffle)};$('#repeat').onclick=()=>{repeat=!repeat;$('#repeat').classList.toggle('active',repeat)};
-$('#volume').oninput=e=>audio.volume=e.target.value;audio.volume=.86;$('#search').oninput=e=>renderList(e.target.value);
-wave.onclick=e=>{if(!audio.duration)return;const r=wave.getBoundingClientRect();audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration};
-$('#lbClose').onclick=closeLightbox;$('#lbPrev').onclick=e=>{e.stopPropagation();showLightboxArt(lightboxIndex-1)};$('#lbNext').onclick=e=>{e.stopPropagation();showLightboxArt(lightboxIndex+1)};lightbox.onclick=closeLightbox;lbImage.onclick=e=>e.stopPropagation();
-audio.onplay=()=>{play.textContent='❚❚';$('#status').textContent='playing';renderList($('#search').value)};audio.onpause=()=>{play.textContent='▶';$('#status').textContent=audio.currentTime?'paused':'ready';renderList($('#search').value)};
-audio.onloadedmetadata=()=>{$('#duration').textContent=fmt(audio.duration);$('#status').textContent=audio.paused?'ready':'playing'};
-audio.ontimeupdate=()=>{$('#elapsed').textContent=fmt(audio.currentTime);paintWave()};audio.onended=()=>repeat?(audio.currentTime=0,audio.play()):nextTrack();audio.onerror=()=>{$('#status').textContent='audio unavailable'};
-document.addEventListener('keydown',e=>{if(!lightbox.hidden){if(e.code==='Escape')closeLightbox();else if(e.code==='ArrowRight')showLightboxArt(lightboxIndex+1);else if(e.code==='ArrowLeft')showLightboxArt(lightboxIndex-1);return}if(e.target.matches('input'))return;if(e.code==='Space'){e.preventDefault();play.click()}if(e.code==='ArrowRight')nextTrack();if(e.code==='ArrowLeft')prevTrack();});
-loadTrack(0,false);
-</script>
-</body>
-</html>
+const tracks=[['CS-80-001 [ I ]','CS-80-001.I.web.m4a','CS-80-001 [ I ].png'],['CS-80-001 [ II ]','CS-80-001.II.web.m4a','CS-80-001 [ II ].png'],['Desert Darling [ I ]','Desert.Darling.I.web.m4a','Desert Darling [ I ].png'],['Devil of Lonely Gypsy Days','Devil.of.Lonely.Gypsy.Days.web.m4a','Devil of Lonely Gypsy Days.png'],['Dollar and a Dime [ IV ]','Dollar.and.a.Dime.IV.web.m4a','Dollar and a Dime [ IV ].png'],['DooWhatUGottaDoo [ I ]','DooWhatU���q�^u�+v+)��
