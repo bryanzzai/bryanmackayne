@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bryan MacKayne – Dies Akita</title>
+<style>
+:root{--bg:#050608;--panel:#0b0d12;--panel2:#11151d;--text:#f4efe5;--muted:#9aa2ae;--line:#242a34;--gold:#d6b56b;--silver:#b7c3d1;--danger:#e37d7d}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#050608;color:var(--text);font:16px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}.shell{width:min(1220px,calc(100% - 24px));margin:auto}
+.hero{position:relative;min-height:390px;overflow:hidden;border:1px solid #1f242c;border-top:0;border-radius:0 0 30px 30px;background:#06080b;box-shadow:0 35px 90px #000b;isolation:isolate}.heroPreview{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;filter:brightness(.48) saturate(.72) contrast(1.05) blur(1px);z-index:-3}.heroShade{position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,#030405f2 0%,#040506c9 38%,#04050655 70%,#030405bf 100%),linear-gradient(0deg,#050608 0%,transparent 62%)}.heroNoise{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 70% 20%,transparent 0 20%,#0004 68%,#0009 100%)}
+.heroCopy{position:absolute;left:clamp(26px,6vw,76px);right:clamp(24px,5vw,70px);bottom:46px}.eyebrow{font-size:.74rem;letter-spacing:.34em;text-transform:uppercase;color:#c3a86e}.hero h1{font:500 clamp(3.2rem,8vw,7.6rem)/.84 Georgia,'Times New Roman',serif;margin:.12em 0 .12em;text-shadow:0 7px 30px #000}.hero h1 span{display:block;margin-top:.34em;font:500 clamp(1.1rem,2.4vw,2.2rem)/1.1 Georgia,serif;color:#d1d6dc;letter-spacing:.035em}.hero p{margin:.8rem 0 0;max-width:700px;color:#c7cbd0;font-size:clamp(.96rem,1.5vw,1.08rem)}
+.cinema{margin:26px 0 0;background:linear-gradient(180deg,#10131a,#080a0e);border:1px solid #202630;border-radius:26px;padding:clamp(12px,2vw,22px);box-shadow:0 24px 70px #0008}.screen{position:relative;background:#000;border:1px solid #262b33;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px #000b,inset 0 0 0 1px #ffffff0b}.screen:before{content:"";display:block;padding-top:56.25%}.screen video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}.screenGlow{pointer-events:none;position:absolute;inset:0;box-shadow:inset 0 0 70px #0008}
+.nowBar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 4px 2px}.nowLabel{font-size:.68rem;text-transform:uppercase;letter-spacing:.22em;color:var(--gold);margin-bottom:4px}.nowTitle{font:500 clamp(1.35rem,2.7vw,2.15rem)/1.08 Georgia,serif}.nowMeta{color:var(--muted);font-size:.82rem;margin-top:5px}.transport{display:flex;align-items:center;gap:8px}.transport button,.back{border:1px solid #343c48;background:#121720;color:var(--text);border-radius:999px;cursor:pointer;text-decoration:none;transition:.16s transform,.16s border-color,.16s background}.transport button{width:44px;height:44px;font-size:1.12rem}.transport button:hover,.back:hover{border-color:var(--gold);transform:translateY(-1px)}.transport .wide{width:auto;padding:0 15px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}.back{display:inline-block;padding:10px 16px;margin:0 0 16px;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase}
+.library{margin:22px 0 88px}.libraryHead{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:0 3px 14px}.libraryHead h2{margin:0;font:500 clamp(1.55rem,3vw,2.25rem) Georgia,serif}.libraryHead p{margin:0;color:var(--muted);font-size:.84rem}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.film{position:relative;display:block;border:1px solid #242b35;border-radius:18px;overflow:hidden;background:#0b0e13;color:inherit;text-align:left;padding:0;cursor:pointer;box-shadow:0 14px 34px #0005;transition:.18s transform,.18s border-color,.18s box-shadow}.film:hover{transform:translateY(-3px);border-color:#596372;box-shadow:0 20px 45px #0008}.film.active{border-color:var(--gold);box-shadow:0 0 0 1px #d6b56b55,0 20px 50px #000a}.thumb{position:relative;aspect-ratio:16/9;background:radial-gradient(circle at 50% 40%,#252b36,#080a0e 68%);overflow:hidden}.thumb video{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.9) brightness(.82);pointer-events:none}.film:hover .thumb video,.film.active .thumb video{filter:saturate(1) brightness(.98)}.thumb:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,#000b 100%);pointer-events:none}.playMark{position:absolute;left:14px;bottom:12px;z-index:2;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#080a0ed9;border:1px solid #e8d29b88;color:#f3d98e;font-size:.85rem;box-shadow:0 5px 18px #0008}.filmNo{position:absolute;right:12px;top:10px;z-index:2;font:700 .62rem ui-sans-serif,system-ui,sans-serif;letter-spacing:.1em;color:#ead59c;background:#07090bd9;border:1px solid #c8ab6a55;border-radius:4px;padding:4px 7px}.filmCopy{padding:13px 14px 15px}.filmTitle{font:600 1.02rem/1.15 Georgia,serif}.filmMeta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:.76rem;margin-top:7px}.footer{text-align:center;color:#626b77;font-size:.79rem;padding:0 0 34px}
+@media(max-width:850px){.hero{min-height:340px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nowBar{grid-template-columns:1fr}.transport{justify-content:flex-start}.libraryHead{align-items:flex-start;flex-direction:column}}
+@media(max-width:560px){.shell{width:min(100% - 12px,1220px)}.hero{min-height:315px;border-radius:0 0 22px 22px}.heroCopy{left:20px;right:18px;bottom:28px}.hero h1{font-size:clamp(3rem,18vw,5rem)}.cinema{border-radius:18px;padding:7px}.screen{border-radius:12px}.nowBar{padding:14px 6px 5px}.grid{grid-template-columns:1fr}.transport button{width:42px;height:42px}.library{margin-bottom:60px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="hero">
+  <video id="heroPreview" class="heroPreview" muted playsinline preload="metadata" aria-hidden="true"></video>
+  <div class="heroShade"></div><div class="heroNoise"></div>
+  <div class="heroCopy">
+    <div class="eyebrow">Bryan MacKayne · Film Cycle</div>
+    <h1>Dies Akita <span>Nine Tales from the Suno Cycle</span></h1>
+    <p>Nine films from the Dies Akita cycle. Let the darkness breathe.</p>
+  </div>
+</header>
+
+<main>
+<section class="cinema" aria-label="Dies Akita video player">
+  <div class="screen">
+    <video id="player" controls preload="metadata" playsinline></video>
+    <div class="screenGlow"></div>
+  </div>
+  <div class="nowBar">
+    <div>
+      <div class="nowLabel">Now showing</div>
+      <div id="nowTitle" class="nowTitle">A Count of Tears [ V ]</div>
+      <div id="nowMeta" class="nowMeta">Film 1 of 9 · 4:30</div>
+    </div>
+    <div class="transport">
+      <button id="prev" type="button" title="Previous film" aria-label="Previous film">⏮</button>
+      <button id="next" type="button" title="Next film" aria-label="Next film">⏭</button>
+      <button id="restart" class="wide" type="button" title="Restart film">Restart</button>
+    </div>
+  </div>
+</section>
+
+<section class="library" aria-label="Dies Akita film library">
+  <div class="libraryHead"><div><h2>Dies Akita · 9 films</h2><p>Each film is a separate visual work, even where the musical source returns.</p></div><a class="back" href="../">Back to Moby Suno</a></div>
+  <div id="filmGrid" class="grid"></div>
+</section>
+</main>
+<div class="footer">Bryan MacKayne – Dies Akita · GitHub Pages video player</div>
+</div>
+<script>
+const RELEASE_BASE='https://github.com/bryanzzai/bryanmackayne/releases/download/dies-akita';
+const films=[
+  {title:'A Count of Tears [ V ]',file:'A.Count.of.Tears.V.mp4',duration:'4:30',thumb:140},
+  {title:'A Dollar and a Dime [ I ]',file:'A.Dollar.and.a.Dime.I.mp4',duration:'4:37',thumb:144},
+  {title:'A Dollar and a Dime [ II ]',file:'A.Dollar.and.a.Dime.II.mp4',duration:'4:37',thumb:144},
+  {title:'A Dollar and a Dime [ III ]',file:'A.Dollar.and.a.Dime.III.mp4',duration:'4:39',thumb:212},
+  {title:'Black Hole Heart',file:'Black.Hole.Heart.mp4',duration:'5:04',thumb:85},
+  {title:'Gateway Girl [ I ]',file:'Gateway.Girl.I.mp4',duration:'4:09',thumb:129},
+  {title:'Gateway Girl [ II ]',file:'Gateway.Girl.II.mp4',duration:'4:52',thumb:152},
+  {title:'Intergalactic Lovers [ I ]',file:'Intergalactic.Lovers.I.mp4',duration:'4:24',thumb:137},
+  {title:'Intergalactic Lovers [ II ]',file:'Intergalactic.Lovers.II.mp4',duration:'4:24',thumb:138}
+];
+const player=document.querySelector('#player'),hero=document.querySelector('#heroPreview'),grid=document.querySelector('#filmGrid'),nowTitle=document.querySelector('#nowTitle'),nowMeta=document.querySelector('#nowMeta');
+let current=0;
+const mediaUrl=file=>`${RELEASE_BASE}/${encodeURIComponent(file)}`;
+function heroStill(i){
+  const f=films[i];
+  hero.src=mediaUrl(f.file);
+  hero.load();
+  hero.onloadedmetadata=()=>{try{hero.currentTime=Math.min(f.thumb,Math.max(0,hero.duration-1))}catch(e){}};
+  hero.onseeked=()=>hero.pause();
+}
+function setFilm(i,autoplay=false){
+  current=(i+films.length)%films.length;
+  const f=films[current];
+  player.src=mediaUrl(f.file);player.load();
+  nowTitle.textContent=f.title;nowMeta.textContent=`Film ${current+1} of ${films.length} · ${f.duration}`;
+  [...grid.children].forEach((el,n)=>el.classList.toggle('active',n===current));
+  heroStill(current);
+  if(autoplay){player.play().catch(()=>{});}
+}
+function makeCard(f,i){
+  const b=document.createElement('button');b.className='film';b.type='button';b.setAttribute('aria-label',`Play ${f.title}`);
+  b.innerHTML=`<div class="thumb"><video muted playsinline preload="metadata"></video><span class="filmNo">${String(i+1).padStart(2,'0')}</span><span class="playMark">▶</span></div><div class="filmCopy"><div class="filmTitle"></div><div class="filmMeta"><span>Dies Akita</span><span>${f.duration}</span></div></div>`;
+  b.querySelector('.filmTitle').textContent=f.title;
+  const v=b.querySelector('video');v.src=mediaUrl(f.file);v.addEventListener('loadedmetadata',()=>{try{v.currentTime=Math.min(f.thumb,Math.max(0,v.duration-1))}catch(e){}},{once:true});v.addEventListener('seeked',()=>v.pause());
+  b.addEventListener('click',()=>setFilm(i,true));return b;
+}
+films.forEach((f,i)=>grid.appendChild(makeCard(f,i)));
+document.querySelector('#prev').addEventListener('click',()=>setFilm(current-1,true));
+document.querySelector('#next').addEventListener('click',()=>setFilm(current+1,true));
+document.querySelector('#restart').addEventListener('click',()=>{player.currentTime=0;player.play().catch(()=>{})});
+player.addEventListener('ended',()=>setFilm(current+1,true));
+player.addEventListener('error',()=>{nowMeta.textContent=`Film ${current+1} of ${films.length} · video could not be loaded`;});
+setFilm(0,false);
+</script>
+</body>
+</html>
