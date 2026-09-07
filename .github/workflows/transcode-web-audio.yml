@@ -17,6 +17,57 @@ jobs:
     env:
       RELEASE_TAG: ${{ inputs.release_tag }}
     steps:
+      - name: Check out site repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Install optional site asset package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          package="${RELEASE_TAG}-site-assets.zip"
+          mkdir -p site-package
+          if gh release download "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir site-package \
+            --pattern "$package"; then
+            python3 - <<'PY'
+          import os
+          from pathlib import PurePosixPath
+          from zipfile import ZipFile
+
+          tag = os.environ['RELEASE_TAG']
+          package = f'site-package/{tag}-site-assets.zip'
+          with ZipFile(package) as archive:
+              for info in archive.infolist():
+                  path = PurePosixPath(info.filename)
+                  if info.is_dir():
+                      continue
+                  if path.is_absolute() or '..' in path.parts:
+                      raise SystemExit(f'Unsafe path in site asset package: {info.filename}')
+                  if len(path.parts) < 3 or path.parts[0] != tag or path.parts[1] not in {'art', 'assets'}:
+                      raise SystemExit(f'Unexpected site asset path: {info.filename}')
+                  mode = (info.external_attr >> 16) & 0o170000
+                  if mode == 0o120000:
+                      raise SystemExit(f'Symlinks are not allowed in site asset package: {info.filename}')
+              archive.extractall('.')
+          PY
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- "$RELEASE_TAG/art" "$RELEASE_TAG/assets"
+            if git diff --cached --quiet; then
+              echo "Site assets already match repository."
+            else
+              git commit -m "Add ${RELEASE_TAG} artwork and header assets"
+              git push origin HEAD:main
+            fi
+          else
+            echo "No optional site asset package named $package; continuing with audio only."
+          fi
+
       - name: Install ffmpeg
         run: |
           sudo apt-get update
