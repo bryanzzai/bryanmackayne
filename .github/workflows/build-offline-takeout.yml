@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '.github/workflows/build-offline-takeout.yml'
+      - '.github/offline/**'
 
 permissions:
   contents: read
