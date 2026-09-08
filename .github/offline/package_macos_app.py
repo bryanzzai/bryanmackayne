@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import argparse
 import hashlib
 import plistlib
 import shutil
@@ -14,59 +15,64 @@ RESOURCES = CONTENTS / "Resources"
 SITE = RESOURCES / "site"
 OUT = Path("macos-app-parts")
 
-if APP.exists():
-    shutil.rmtree(APP)
-if OUT.exists():
-    shutil.rmtree(OUT)
-OUT.mkdir(parents=True)
-MACOS.mkdir(parents=True)
-RESOURCES.mkdir(parents=True, exist_ok=True)
+parser = argparse.ArgumentParser()
+parser.add_argument("mode", choices=("prepare", "package"))
+args = parser.parse_args()
 
-if not OFFLINE.is_dir():
-    raise SystemExit("Offline working tree is missing")
+if args.mode == "prepare":
+    if APP.exists():
+        shutil.rmtree(APP)
+    if OUT.exists():
+        shutil.rmtree(OUT)
+    OUT.mkdir(parents=True)
+    MACOS.mkdir(parents=True)
+    RESOURCES.mkdir(parents=True, exist_ok=True)
 
-# Add a final manifest before the offline tree becomes an app resource.
-manifest = OFFLINE / "MANIFEST-SHA256.txt"
-lines = []
-for p in sorted(x for x in OFFLINE.rglob("*") if x.is_file() and x != manifest):
-    h = hashlib.sha256()
-    with p.open("rb") as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b""):
-            h.update(chunk)
-    lines.append(f"{h.hexdigest()}  {p.relative_to(OFFLINE).as_posix()}")
-manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    if not OFFLINE.is_dir():
+        raise SystemExit("Offline working tree is missing")
 
-shutil.move(str(OFFLINE), str(SITE))
+    manifest = OFFLINE / "MANIFEST-SHA256.txt"
+    lines = []
+    for p in sorted(x for x in OFFLINE.rglob("*") if x.is_file() and x != manifest):
+        h = hashlib.sha256()
+        with p.open("rb") as f:
+            for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                h.update(chunk)
+        lines.append(f"{h.hexdigest()}  {p.relative_to(OFFLINE).as_posix()}")
+    manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-info = {
-    "CFBundleName": "The 12 Day Dancer",
-    "CFBundleDisplayName": "The 12 Day Dancer",
-    "CFBundleIdentifier": "dk.bryanmackayne.the12daydancer.offline",
-    "CFBundleVersion": "1",
-    "CFBundleShortVersionString": "1.0",
-    "CFBundlePackageType": "APPL",
-    "CFBundleExecutable": "The12DayDancer",
-    "CFBundleIconFile": "The12DayDancer.icns",
-    "LSMinimumSystemVersion": "13.0",
-    "NSHighResolutionCapable": True,
-}
-with (CONTENTS / "Info.plist").open("wb") as f:
-    plistlib.dump(info, f, sort_keys=False)
-(CONTENTS / "PkgInfo").write_text("APPL????", encoding="ascii")
+    shutil.move(str(OFFLINE), str(SITE))
 
-# The compiled launcher and .icns are added by the workflow after this script.
-print(f"Prepared app resource tree: {SITE}")
-print(f"Manifest entries: {len(lines)}")
+    info = {
+        "CFBundleName": "The 12 Day Dancer",
+        "CFBundleDisplayName": "The 12 Day Dancer",
+        "CFBundleIdentifier": "dk.bryanmackayne.the12daydancer.offline",
+        "CFBundleVersion": "1",
+        "CFBundleShortVersionString": "1.0",
+        "CFBundlePackageType": "APPL",
+        "CFBundleExecutable": "The12DayDancer",
+        "CFBundleIconFile": "The12DayDancer.icns",
+        "LSMinimumSystemVersion": "13.0",
+        "NSHighResolutionCapable": True,
+    }
+    with (CONTENTS / "Info.plist").open("wb") as f:
+        plistlib.dump(info, f, sort_keys=False)
+    (CONTENTS / "PkgInfo").write_text("APPL????", encoding="ascii")
 
-# A second invocation after compilation/signing performs packaging.
-marker = Path(".macos-app-ready")
-if not marker.exists():
+    print(f"Prepared app resource tree: {SITE}")
+    print(f"Manifest entries: {len(lines)}")
     raise SystemExit(0)
 
+if not APP.is_dir():
+    raise SystemExit("Prepared app bundle is missing")
 launcher = MACOS / "The12DayDancer"
 icon = RESOURCES / "The12DayDancer.icns"
 if not launcher.is_file() or not icon.is_file():
     raise SystemExit("Compiled launcher or app icon missing")
+
+if OUT.exists():
+    shutil.rmtree(OUT)
+OUT.mkdir(parents=True)
 
 # Independent ZIPs small enough to be downloaded separately through the connector.
 max_bytes = 350 * 1024 * 1024
