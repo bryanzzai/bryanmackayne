@@ -24,23 +24,25 @@ media = sorted([*ROOT.rglob("*.web.m4a"), *ROOT.rglob("*.mp4")])
 if len(media) != 238:
     raise SystemExit(f"Expected 238 media files before testing, found {len(media)}")
 
-# Container-level validation: every browser file must be readable media with a positive duration.
+# Every browser file must be valid media with positive duration.
 for i, path in enumerate(media, 1):
     result = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(path)],
         capture_output=True, text=True, check=True,
     )
-    duration = float(result.stdout.strip())
-    if duration <= 0:
-        raise SystemExit(f"Invalid duration for {path}: {duration}")
+    if float(result.stdout.strip()) <= 0:
+        raise SystemExit(f"Invalid duration for {path}")
     if i % 50 == 0 or i == len(media):
         print(f"ffprobe {i}/{len(media)}")
 with REPORT.open("a", encoding="utf-8") as f:
     f.write(f"ffprobe: {len(media)}/{len(media)} media files valid with positive duration\n")
 
-# Run the exact local server shipped in the archive.
+# Run exactly the local server shipped in the takeout.
 env = os.environ.copy(); env["THE12_NO_BROWSER"] = "1"
-server = subprocess.Popen([sys.executable, "server.py"], cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+server = subprocess.Popen(
+    [sys.executable, "server.py"], cwd=ROOT, env=env,
+    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+)
 try:
     for _ in range(60):
         try:
@@ -53,7 +55,7 @@ try:
         out = server.stdout.read() if server.stdout else ""
         raise RuntimeError("Local server did not start.\n" + out)
 
-    # Every media file must support byte ranges; this is what makes local seeking reliable.
+    # Seeking requires byte ranges. Verify every single audio/video file.
     for i, path in enumerate(media, 1):
         rel = path.relative_to(ROOT).as_posix()
         req = urllib.request.Request(BASE + quote(rel), headers={"Range": "bytes=0-31"})
@@ -66,7 +68,7 @@ try:
     with REPORT.open("a", encoding="utf-8") as f:
         f.write(f"HTTP byte-range: {len(media)}/{len(media)} media files returned 206\n")
 
-    # Chrome is deliberately prevented from resolving anything except localhost.
+    # Chrome cannot resolve the internet during this test: localhost only.
     opts = Options()
     opts.add_argument("--headless=new")
     opts.add_argument("--no-sandbox")
@@ -76,20 +78,26 @@ try:
     opts.add_argument("--host-resolver-rules=MAP * 0.0.0.0, EXCLUDE localhost, EXCLUDE 127.0.0.1")
     driver = webdriver.Chrome(options=opts)
     driver.set_page_load_timeout(60)
-    driver.set_script_timeout(30)
+    driver.set_script_timeout(35)
 
+    # Metadata uses a fresh, detached test element for every file. This avoids
+    # interference from the player's own event handlers while still exercising Chrome.
     metadata_script = r"""
-      const selector=arguments[0], filename=arguments[1], done=arguments[2];
-      const el=document.querySelector(selector);
-      if(!el){done({ok:false,error:'media element missing'});return;}
+      const tag=arguments[0], filename=arguments[1], done=arguments[2];
+      const el=document.createElement(tag);
+      el.preload='metadata'; el.muted=true; el.style.display='none';
+      document.body.appendChild(el);
       let finished=false;
-      const finish=x=>{if(finished)return;finished=true;clearTimeout(timer);done(x)};
-      const timer=setTimeout(()=>finish({ok:false,error:'metadata timeout',ready:el.readyState}),12000);
-      el.pause(); el.src='media/'+encodeURIComponent(filename); el.muted=true;
+      const cleanup=()=>{try{el.pause();el.removeAttribute('src');el.load();el.remove();}catch(e){}};
+      const finish=x=>{if(finished)return;finished=true;clearTimeout(timer);cleanup();done(x)};
+      const timer=setTimeout(()=>finish({ok:false,error:'metadata timeout',ready:el.readyState}),15000);
       el.onloadedmetadata=()=>finish({ok:Number.isFinite(el.duration)&&el.duration>0,duration:el.duration,ready:el.readyState});
       el.onerror=()=>finish({ok:false,error:el.error&&el.error.code,ready:el.readyState});
+      el.src='media/'+encodeURIComponent(filename);
       el.load();
     """
+
+    # Playback/seek deliberately uses the real page player element.
     playback_script = r"""
       const selector=arguments[0], filename=arguments[1], done=arguments[2];
       const el=document.querySelector(selector);
@@ -114,7 +122,9 @@ try:
 
     try:
         driver.get(BASE + "index.html")
-        links = driver.execute_script("return [...document.querySelectorAll('a.album.live')].map(a=>a.getAttribute('href'))")
+        links = driver.execute_script(
+            "return [...document.querySelectorAll('a.album.live')].map(a=>a.getAttribute('href'))"
+        )
         expected_links = [f"{album}/index.html" for album in ALBUMS]
         if links != expected_links:
             raise RuntimeError(f"Bulgarian panel paths/order mismatch: {links}")
@@ -133,17 +143,29 @@ try:
             if not refs:
                 raise RuntimeError(f"{album}: runtime media manifest is empty")
 
+            tag = "video" if album == "dies-akita" else "audio"
             selector = "#player" if album == "dies-akita" else "#audio"
             for name in refs:
-                result = driver.execute_async_script(metadata_script, selector, name)
-                if not result.get("ok"):
+                result = None
+                for attempt in range(2):
+                    result = driver.execute_async_script(metadata_script, tag, name)
+                    if result.get("ok"):
+                        break
+                    time.sleep(0.25)
+                if not result or not result.get("ok"):
                     raise RuntimeError(f"{album}: browser metadata failed for {name}: {result}")
                 metadata_total += 1
-            for idx in ({0, len(refs)-1} if len(refs) > 1 else {0}):
+
+            indices = [0] if len(refs) == 1 else [0, len(refs) - 1]
+            for idx in indices:
                 result = driver.execute_async_script(playback_script, selector, refs[idx])
                 if not result.get("ok"):
                     raise RuntimeError(f"{album}: playback/seek failed for {refs[idx]}: {result}")
-            line = f"{album}: runtime mapping {len(refs)}/{len(local)} exact; all metadata OK; first+last playback/seek OK"
+
+            line = (
+                f"{album}: runtime mapping {len(refs)}/{len(local)} exact; "
+                "all metadata OK; first+last playback/seek OK"
+            )
             tested.append(line); print(line)
 
         if metadata_total != 238:
@@ -157,7 +179,8 @@ try:
         driver.quit()
 finally:
     server.terminate()
-    try: server.wait(timeout=10)
+    try:
+        server.wait(timeout=10)
     except subprocess.TimeoutExpired:
         server.kill(); server.wait()
 
