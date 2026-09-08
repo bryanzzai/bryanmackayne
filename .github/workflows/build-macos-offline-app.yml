@@ -48,12 +48,21 @@ jobs:
             gh release view "$album" --repo "$GITHUB_REPOSITORY" >/dev/null
             mkdir -p "$OFFLINE_DIR/$album/media"
             echo "Downloading $album"
-            gh release download "$album" \
-              --repo "$GITHUB_REPOSITORY" \
-              --dir "$OFFLINE_DIR/$album/media" \
-              --pattern '*.web.m4a' \
-              --pattern '*.mp4' \
-              --clobber
+            ok=0
+            for attempt in 1 2 3 4 5; do
+              if gh release download "$album" \
+                --repo "$GITHUB_REPOSITORY" \
+                --dir "$OFFLINE_DIR/$album/media" \
+                --pattern '*.web.m4a' \
+                --pattern '*.mp4' \
+                --clobber; then
+                ok=1
+                break
+              fi
+              echo "Transient Release download failure for $album; retry $attempt/5"
+              sleep $((attempt * 4))
+            done
+            test "$ok" = 1 || { echo "Could not download $album after retries" >&2; exit 1; }
           done
           test "$(find "$OFFLINE_DIR" -type f -name '*.web.m4a' | wc -l | tr -d ' ')" = 229
           test "$(find "$OFFLINE_DIR" -type f -name '*.mp4' | wc -l | tr -d ' ')" = 9
