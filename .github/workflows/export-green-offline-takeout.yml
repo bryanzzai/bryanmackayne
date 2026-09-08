@@ -1,0 +1,120 @@
+name: Export tested offline takeout parts
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/export-green-offline-takeout.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GREEN_RUN_ID: '34197069625'
+      GREEN_ARTIFACT: The-12-Day-Dancer-Complete-Offline-Takeout
+    steps:
+      - name: Download exact artifact from green tested run
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p takeout-parts
+          gh run download "$GREEN_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "$GREEN_ARTIFACT" \
+            --dir takeout-parts
+          ls -lh takeout-parts
+
+      - name: Verify seven tested ZIP parts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f takeout-parts/PARTS.txt
+          expected=(
+            '450552151:The-12-Day-Dancer-Offline-Part-001.zip'
+            '469087003:The-12-Day-Dancer-Offline-Part-002.zip'
+            '469782310:The-12-Day-Dancer-Offline-Part-003.zip'
+            '471095099:The-12-Day-Dancer-Offline-Part-004.zip'
+            '470374602:The-12-Day-Dancer-Offline-Part-005.zip'
+            '468191802:The-12-Day-Dancer-Offline-Part-006.zip'
+            '84191885:The-12-Day-Dancer-Offline-Part-007.zip'
+          )
+          for item in "${expected[@]}"; do
+            size="${item%%:*}"; name="${item#*:}"
+            test -f "takeout-parts/$name"
+            actual=$(stat -c '%s' "takeout-parts/$name")
+            test "$actual" = "$size" || { echo "$name size $actual != $size" >&2; exit 1; }
+            unzip -tq "takeout-parts/$name" >/dev/null
+            echo "verified $name ($actual bytes)"
+          done
+          count=$(find takeout-parts -maxdepth 1 -type f -name 'The-12-Day-Dancer-Offline-Part-*.zip' | wc -l)
+          test "$count" = 7
+
+      - name: Upload index
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-INDEX
+          path: takeout-parts/PARTS.txt
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 001
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-001
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-001.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 002
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-002
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-002.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 003
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-003
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-003.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 004
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-004
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-004.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 005
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-005
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-005.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 006
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-006
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-006.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 007
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-007
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-007.zip
+          compression-level: 0
+          retention-days: 30
