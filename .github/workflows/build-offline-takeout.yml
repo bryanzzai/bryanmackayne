@@ -76,11 +76,66 @@ jobs:
       - name: Manifest and split package
         run: python3 .github/offline/package_takeout.py
 
-      - name: Upload complete offline takeout
+      - name: Upload takeout index
         uses: actions/upload-artifact@v4
         with:
-          name: The-12-Day-Dancer-Complete-Offline-Takeout
-          path: takeout-parts/
-          if-no-files-found: error
+          name: The-12-Day-Dancer-Offline-INDEX
+          path: takeout-parts/PARTS.txt
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 001
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-001
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-001.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 002
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-002
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-002.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 003
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-003
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-003.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 004
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-004
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-004.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 005
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-005
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-005.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 006
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-006
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-006.zip
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload part 007
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-Offline-Part-007
+          path: takeout-parts/The-12-Day-Dancer-Offline-Part-007.zip
           compression-level: 0
           retention-days: 30
