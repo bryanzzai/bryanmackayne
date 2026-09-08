@@ -1,0 +1,229 @@
+name: Build macOS offline concert house
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-macos-offline-app.yml'
+      - '.github/offline/macos/**'
+      - '.github/offline/package_macos_app.py'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OFFLINE_DIR: The-12-Day-Dancer-Offline
+      SOURCE_SITE_COMMIT: 299658b9017969b2edd81ab4998d439e13badcf2
+      APP: The 12 Day Dancer.app
+    steps:
+      - name: Checkout builder repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Recreate the proven offline takeout source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$OFFLINE_DIR" macos-app-parts "$APP"
+          mkdir -p "$OFFLINE_DIR"
+          git archive "$SOURCE_SITE_COMMIT" | tar -x -C "$OFFLINE_DIR"
+          printf '%s\n' "$SOURCE_SITE_COMMIT" > "$OFFLINE_DIR/SOURCE-COMMIT.txt"
+
+      - name: Download browser media from all 12 Releases
+        shell: bash
+        run: |
+          set -euo pipefail
+          albums=(
+            dies-iovis dies-solis dies-martis dies-albini dies-tigris dies-delfini
+            dies-canis dies-felis dies-tauri dies-ursi dies-apri dies-akita
+          )
+          for album in "${albums[@]}"; do
+            test -f "$OFFLINE_DIR/$album/index.html" || { echo "Missing $album/index.html" >&2; exit 1; }
+            gh release view "$album" --repo "$GITHUB_REPOSITORY" >/dev/null
+            mkdir -p "$OFFLINE_DIR/$album/media"
+            echo "Downloading $album"
+            gh release download "$album" \
+              --repo "$GITHUB_REPOSITORY" \
+              --dir "$OFFLINE_DIR/$album/media" \
+              --pattern '*.web.m4a' \
+              --pattern '*.mp4' \
+              --clobber
+          done
+          test "$(find "$OFFLINE_DIR" -type f -name '*.web.m4a' | wc -l | tr -d ' ')" = 229
+          test "$(find "$OFFLINE_DIR" -type f -name '*.mp4' | wc -l | tr -d ' ')" = 9
+          if find "$OFFLINE_DIR" -type f -name '*.m4a' ! -name '*.web.m4a' | grep -q .; then
+            echo 'Original/non-web M4A unexpectedly present.' >&2
+            exit 1
+          fi
+          echo 'Media contract: 229 web M4A + 9 MP4 + 0 original M4A'
+
+      - name: Make strict offline edition
+        run: python3 .github/offline/prepare_takeout.py
+
+      - name: Prepare macOS app bundle
+        run: python3 .github/offline/package_macos_app.py prepare
+
+      - name: Compile universal native launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='.github/offline/macos/The12DayDancerLauncher.swift'
+          mkdir -p build-macos
+          xcrun swiftc -O -target x86_64-apple-macos13.0 "$SRC" -o build-macos/launcher-x86_64 -framework Cocoa
+          xcrun swiftc -O -target arm64-apple-macos13.0 "$SRC" -o build-macos/launcher-arm64 -framework Cocoa
+          lipo -create build-macos/launcher-x86_64 build-macos/launcher-arm64 -output "$APP/Contents/MacOS/The12DayDancer"
+          chmod 755 "$APP/Contents/MacOS/The12DayDancer"
+          file "$APP/Contents/MacOS/The12DayDancer"
+          lipo -info "$APP/Contents/MacOS/The12DayDancer"
+
+      - name: Build ballerina app icon
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$APP/Contents/Resources/site/assets/bulgarian-ballerina.png"
+          test -f "$SRC"
+          ICONSET=build-macos/The12DayDancer.iconset
+          rm -rf "$ICONSET"
+          mkdir -p "$ICONSET"
+          for spec in '16 icon_16x16.png' '32 icon_16x16@2x.png' '32 icon_32x32.png' '64 icon_32x32@2x.png' '128 icon_128x128.png' '256 icon_128x128@2x.png' '256 icon_256x256.png' '512 icon_256x256@2x.png' '512 icon_512x512.png' '1024 icon_512x512@2x.png'; do
+            set -- $spec
+            sips -z "$1" "$1" "$SRC" --out "$ICONSET/$2" >/dev/null
+          done
+          iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/The12DayDancer.icns"
+          test -s "$APP/Contents/Resources/The12DayDancer.icns"
+
+      - name: Ad-hoc sign and verify app bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          codesign --force --deep --sign - --timestamp=none "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          plutil -p "$APP/Contents/Info.plist"
+
+      - name: Smoke-test native launcher and HTTP byte ranges
+        shell: bash
+        run: |
+          set -euo pipefail
+          THE12_NO_BROWSER=1 "$APP/Contents/MacOS/The12DayDancer" &
+          app_pid=$!
+          cleanup() {
+            kill "$app_pid" >/dev/null 2>&1 || true
+            sleep 1
+          }
+          trap cleanup EXIT
+          for i in {1..20}; do
+            if curl -fsS 'http://127.0.0.1:8765/index.html' -o /tmp/the12-index.html; then break; fi
+            sleep 0.5
+          done
+          grep -q 'The 12 Day Dancer' /tmp/the12-index.html
+          sample=$(find "$APP/Contents/Resources/site" -type f -name '*.web.m4a' | head -1)
+          rel=${sample#"$APP/Contents/Resources/site/"}
+          encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$rel")
+          headers=$(mktemp)
+          curl -fsS -D "$headers" -H 'Range: bytes=0-1023' "http://127.0.0.1:8765/$encoded" -o /tmp/the12-range.bin
+          grep -q '206 Partial Content' "$headers"
+          grep -qi '^Accept-Ranges: bytes' "$headers"
+          test "$(wc -c < /tmp/the12-range.bin | tr -d ' ')" = 1024
+          echo 'macOS launcher: GREEN'
+          echo 'HTTP range playback support: GREEN'
+
+      - name: Package self-contained app into download-sized parts
+        run: python3 .github/offline/package_macos_app.py package
+
+      - name: Show package summary
+        run: cat macos-app-parts/PARTS.txt
+
+      - name: Upload Part 001
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-001
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-001.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload Part 002
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-002
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-002.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload Part 003
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-003
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-003.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload Part 004
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-004
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-004.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload Part 005
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-005
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-005.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload Part 006
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-006
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-006.zip
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload Part 007
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-007
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-007.zip
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload Part 008
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-008
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-008.zip
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload Part 009
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-009
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-009.zip
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload Part 010
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-Part-010
+          path: macos-app-parts/The-12-Day-Dancer-macOS-App-Part-010.zip
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Upload parts manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: The-12-Day-Dancer-macOS-PARTS
+          path: macos-app-parts/PARTS.txt
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 30
