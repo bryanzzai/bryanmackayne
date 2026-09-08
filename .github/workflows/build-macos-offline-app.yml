@@ -131,7 +131,8 @@ jobs:
             sleep 0.5
           done
           grep -q 'The 12 Day Dancer' /tmp/the12-index.html
-          sample=$(find "$APP/Contents/Resources/site" -type f -name '*.web.m4a' | head -1)
+          sample=$(find "$APP/Contents/Resources/site" -type f -name '*.web.m4a' -print -quit)
+          test -n "$sample"
           rel=${sample#"$APP/Contents/Resources/site/"}
           encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$rel")
           headers=$(mktemp)
