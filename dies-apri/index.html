@@ -25,12 +25,12 @@ button,input{font:inherit}.shell{width:min(1180px,calc(100% - 28px));margin:auto
   <div class="heroCopy">
     <div class="eyebrow">Bryan MacKayne</div>
     <h1>Dies Apri <span>American Hymnal</span></h1>
-    <p>Eight pieces from the Dies Apri cycle. Let the railroad breathe.</p>
+    <p>Twenty-four pieces from the Dies Apri cycle. Let the railroad breathe.</p>
   </div>
 </header>
 <main class="player">
 <section class="now">
-  <div class="meta"><div class="titleWrap"><small>Now playing</small><div id="trackTitle" class="trackTitle">Alternating Ambience [ I ] MX</div></div><div id="status" class="status">ready</div></div>
+  <div class="meta"><div class="titleWrap"><small>Now playing</small><div id="trackTitle" class="trackTitle">Bargain in Ruins [ IV ]</div></div><div id="status" class="status">ready</div></div>
   <div id="wave" class="wave" aria-label="Seek through track"></div>
   <div class="timeRow"><span id="elapsed">0:00</span><span id="duration">0:00</span></div>
   <div class="controls">
@@ -40,7 +40,7 @@ button,input{font:inherit}.shell{width:min(1180px,calc(100% - 28px));margin:auto
   </div>
 </section>
 <section class="library">
-  <div class="libraryHead"><h2>Dies Apri · 8 tracks</h2><input id="search" class="search" type="search" placeholder="Search the album…" /></div>
+  <div class="libraryHead"><h2>Dies Apri · 24 tracks</h2><input id="search" class="search" type="search" placeholder="Search the album…" /></div>
   <div id="trackList"></div>
 </section>
 </main>
@@ -58,7 +58,32 @@ button,input{font:inherit}.shell{width:min(1180px,calc(100% - 28px));margin:auto
 <script>
 const RELEASE_TAG='dies-apri';
 const RELEASE_BASE=`https://github.com/bryanzzai/bryanmackayne/releases/download/${RELEASE_TAG}`;
-const tracks=[["Alternating Ambience [ I ] MX", "Alternating.Ambience.I.MX.web.m4a", "Alternating Ambience [ I ] MX.png"], ["Alternating Ambience [ II ] MX", "Alternating.Ambience.II.MX.web.m4a", "Alternating Ambience [ II ] MX.png"], ["Alternating Ambience [ III ] MX", "Alternating.Ambience.III.MX.web.m4a", "Alternating Ambience [ III ] MX.png"], ["Alternating Ambience [ IV ] MX", "Alternating.Ambience.IV.MX.web.m4a", "Alternating Ambience [ IV ] MX.png"], ["Alternating Ambience [ V ] MX", "Alternating.Ambience.V.MX.web.m4a", "Alternating Ambience [ V ] MX.png"], ["Alternating Ambience [ VI ] MX", "Alternating.Ambience.VI.MX.web.m4a", "Alternating Ambience [ VI ] MX.png"], ["Alternating Ambience [ VII ] MX", "Alternating.Ambience.VII.MX.web.m4a", "Alternating Ambience [ VII ] MX.png"], ["Alternating Ambience [ VIII ] MX", "Alternating.Ambience.VIII.MX.web.m4a", "Alternating Ambience [ VIII ] MX.png"]].map(([title,file,art],i)=>({title,file,art,index:i}));
+const tracks=[
+  ["Bargain in Ruins [ IV ]", "Bargain.in.Ruins.IV.web.m4a", "Bargain in Ruins [ IV ].png"],
+  ["Bargain in Ruins [ V ] 110 BPM", "Bargain.in.Ruins.V.110.BPM.web.m4a", "Bargain in Ruins [ V ] 110 BPM.png"],
+  ["God Only Knows [ I ]", "God.Only.Knows.I.web.m4a", "God Only Knows [ I ].png"],
+  ["God Only Knows [ II ]", "God.Only.Knows.II.web.m4a", "God Only Knows [ II ].png"],
+  ["God Only Knows [ III ]", "God.Only.Knows.III.web.m4a", "God Only Knows [ III ].png"],
+  ["God Only Knows [ IV ]", "God.Only.Knows.IV.web.m4a", "God Only Knows [ IV ].png"],
+  ["God Only Knows [ V ]", "God.Only.Knows.V.web.m4a", "God Only Knows [ V ].png"],
+  ["God Only Knows [ VI ]", "God.Only.Knows.VI.web.m4a", "God Only Knows [ VI ].png"],
+  ["God Only Knows [ VII ]", "God.Only.Knows.VII.web.m4a", "God Only Knows [ VII ].png"],
+  ["Bachata Ballad", "Bachata.Ballad.web.m4a", "Bachata Ballad.png"],
+  ["Bargain in Ruins [ I ] 110 BPM", "Bargain.in.Ruins.I.110.BPM.web.m4a", "Bargain in Ruins [ I ] 110 BPM.png"],
+  ["Bargain in Ruins [ I ]", "Bargain.in.Ruins.I.web.m4a", "Bargain in Ruins [ I ].png"],
+  ["Bargain in Ruins [ II ]", "Bargain.in.Ruins.II.web.m4a", "Bargain in Ruins [ II ].png"],
+  ["Bargain in Ruins [ III ]", "Bargain.in.Ruins.III.web.m4a", "Bargain in Ruins [ III ].png"],
+  ["Midnight in Blue [ II ]", "Midnight.in.Blue.II.web.m4a", "Midnight in Blue [ II ].png"],
+  ["Midnight in Blue [ III ]", "Midnight.in.Blue.III.web.m4a", "Midnight in Blue [ III ].png"],
+  ["Midnight in Blue [ IV ]", "Midnight.in.Blue.IV.web.m4a", "Midnight in Blue [ IV ].png"],
+  ["Warm Echoes [ I ]", "Warm.Echoes.I.web.m4a", "Warm Echoes [ I ].png"],
+  ["Warm Echoes [ II ]", "Warm.Echoes.II.web.m4a", "Warm Echoes [ II ].png"],
+  ["Warm Static [ I ]", "Warm.Static.I.web.m4a", "Warm Static [ I ].png"],
+  ["Warm Static [ II ]", "Warm.Static.II.web.m4a", "Warm Static [ II ].png"],
+  ["House Ballad [ I ]", "House.Ballad.I.web.m4a", "House Ballad [ I ].png"],
+  ["House Ballad [ II ]", "House.Ballad.II.web.m4a", "House Ballad [ II ].png"],
+  ["Midnight in Blue [ I ]", "Midnight.in.Blue.I.web.m4a", "Midnight in Blue [ I ].png"]
+].map(([title,file,art],i)=>({title,file,art,index:i}));
 const $=s=>document.querySelector(s), audio=$('#audio'), play=$('#play'), wave=$('#wave'), list=$('#trackList');
 const lightbox=$('#lightbox'), lbImage=$('#lbImage'), lbBackdropImage=$('#lbBackdropImage');
 let current=0, shuffle=false, repeat=false, waveBars=[], lightboxIndex=0;
